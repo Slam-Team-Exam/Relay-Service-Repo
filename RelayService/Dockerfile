@@ -1,21 +1,25 @@
-# Use Microsoft’s official .NET SDK image to build the project
+# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /app
+WORKDIR /src
 
-# Copy everything and restore dependencies
-COPY . .
+# Copy project file(s) and restore first to leverage Docker layer caching
+COPY RelayService.csproj ./
 RUN dotnet restore
 
-# Build and publish the app
-RUN dotnet publish -c Release -o out
+# Copy the rest and publish
+COPY . .
+RUN dotnet publish -c Release -o /app/publish
 
-# Use a lightweight runtime image for the final container
+# Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
-COPY --from=build /app/out .
 
-# Expose the port your app runs on
-EXPOSE 7282
+# Listen on container port 80
+ENV ASPNETCORE_URLS=http://+:80
 
-# Run the application
-ENTRYPOINT ["dotnet", "Login-System.dll"]
+COPY --from=build /app/publish .
+
+EXPOSE 80
+
+# Use the published assembly name (from RelayService.csproj)
+ENTRYPOINT ["dotnet", "RelayService.dll"]

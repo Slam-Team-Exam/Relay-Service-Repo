@@ -41,6 +41,10 @@ public class Relay : ControllerBase
     [HttpPost("FoundMatch")]
     public async Task<IActionResult> FoundMatch([FromBody] List<string> input)
     {
+        if(input.Count != 3)
+        {
+            return BadRequest("Invalid input");
+        }
         List<string> PlayerID = [input[0], input[1]];
         string MatchIP = input[2];
 
