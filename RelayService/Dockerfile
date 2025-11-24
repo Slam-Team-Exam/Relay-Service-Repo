@@ -1,17 +1,21 @@
-# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy project file(s) and restore first to leverage Docker layer caching
-COPY RelayService.csproj ./
-RUN dotnet restore
+# Copy project file and restore (keeps restore layer cached)
+COPY ["RelayService.csproj", "./"]
+RUN dotnet restore "RelayService.csproj"
 
-# Copy the rest and publish
+# Copy the rest of the source
 COPY . .
-RUN dotnet publish -c Release -o /app/publish
+
+# Build to surface compilation errors early (do not restore again)
+RUN dotnet build "RelayService.csproj" -c Release
+
+# Publish without restoring (restore already done) and show diagnostic logs
+RUN dotnet publish "RelayService.csproj" -c Release -o /app/publish
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
 # Listen on container port 80
@@ -19,7 +23,4 @@ ENV ASPNETCORE_URLS=http://+:80
 
 COPY --from=build /app/publish .
 
-EXPOSE 80
-
-# Use the published assembly name (from RelayService.csproj)
 ENTRYPOINT ["dotnet", "RelayService.dll"]
