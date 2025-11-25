@@ -21,7 +21,11 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+var tcpPort = builder.Configuration.GetValue<int?>("TcpRelay:Port") ?? 9000;
+
 var app = builder.Build();
+
+_ = SimpleTcpServer.RunAsync(tcpPort, app.Lifetime.ApplicationStopping);
 
 if (app.Environment.IsDevelopment())
 {
