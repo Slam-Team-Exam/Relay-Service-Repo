@@ -1,0 +1,42 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Check .NET project version
+      working-directory: ./RelayService
+      run: |
+        VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" RelayService.csproj)
+        echo "Found project version: $VERSION"
+        if [ -z "$VERSION" ]; then
+          echo "No <Version> found in RelayService.csproj!"
+          exit 1
+        fi
+
+    - name: Build .NET project
+      working-directory: ./RelayService
+      run: dotnet build --configuration Release
+
+    - name: Publish .NET project
+      working-directory: ./RelayService
+      run: dotnet publish -c Release -o ./publish
+
+    - name: Build Docker image
+      working-directory: ./RelayService
+      run: docker build . -f Dockerfile -t relay-service:$(date +%s)
