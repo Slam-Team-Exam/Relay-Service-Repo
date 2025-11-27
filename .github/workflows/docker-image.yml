@@ -28,7 +28,7 @@ jobs:
           echo "No <Version> found in RelayService.csproj!"
           exit 1
         fi
-        *@!q5H5,g2#u
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
 
     - name: Build .NET project
       working-directory: ./RelayService
