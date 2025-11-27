@@ -43,7 +43,7 @@ jobs:
       run: |
         docker build . -f Dockerfile \
           -t ${{ secrets.docker_hub_name }}/relay-service:${VERSION} \
-          -t ${{ secrets.docker_hub_name }}/relay-servicelatest
+          -t ${{ secrets.docker_hub_name }}/relay-service:latest
 
     - name: Push Docker image
       run: |
