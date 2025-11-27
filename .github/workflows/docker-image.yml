@@ -28,6 +28,7 @@ jobs:
           echo "No <Version> found in RelayService.csproj!"
           exit 1
         fi
+        *@!q5H5,g2#u
 
     - name: Build .NET project
       working-directory: ./RelayService
@@ -36,7 +37,15 @@ jobs:
     - name: Publish .NET project
       working-directory: ./RelayService
       run: dotnet publish -c Release -o ./publish
-
+      
     - name: Build Docker image
       working-directory: ./RelayService
-      run: docker build . -f Dockerfile -t relay-service:$(date +%s)
+      run: |
+        docker build . -f Dockerfile \
+          -t ${{ secrets.docker_hub_name }}/relay-service:${VERSION} \
+          -t ${{ secrets.docker_hub_name }}/relay-servicelatest
+
+    - name: Push Docker image
+      run: |
+        docker push ${{ secrets.docker_hub_name }}/relay-service:${VERSION}
+        docker push ${{ secrets.docker_hub_name }}/relay-service:latest
