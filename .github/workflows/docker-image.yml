@@ -37,6 +37,9 @@ jobs:
     - name: Publish .NET project
       working-directory: ./RelayService
       run: dotnet publish -c Release -o ./publish
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.docker_hub_pass }}" | docker login -u "${{ secrets.docker_hub_name }}" --password-stdin
       
     - name: Build Docker image
       working-directory: ./RelayService
