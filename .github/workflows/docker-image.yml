@@ -28,6 +28,7 @@ jobs:
           echo "No <Version> found in RelayService.csproj!"
           exit 1
         fi
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
 
     - name: Build .NET project
       working-directory: ./RelayService
@@ -37,6 +38,17 @@ jobs:
       working-directory: ./RelayService
       run: dotnet publish -c Release -o ./publish
 
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.docker_hub_pass }}" | docker login -u "${{ secrets.docker_hub_name }}" --password-stdin
+      
     - name: Build Docker image
       working-directory: ./RelayService
-      run: docker build . -f Dockerfile -t relay-service:$(date +%s)
+      run: |
+        docker build . -f Dockerfile \
+          -t ${{ secrets.docker_hub_name }}/relay-service:${VERSION} \
+          -t ${{ secrets.docker_hub_name }}/relay-service:latest
+
+    - name: Push Docker image
+      run: |
+        docker push ${{ secrets.docker_hub_name }}/relay-service:${VERSION}
+        docker push ${{ secrets.docker_hub_name }}/relay-service:latest
